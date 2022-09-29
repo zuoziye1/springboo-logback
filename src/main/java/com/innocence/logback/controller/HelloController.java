@@ -1,9 +1,12 @@
 package com.innocence.logback.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -21,46 +24,31 @@ import java.util.concurrent.TimeoutException;
 public class HelloController {
 
 
+    /**
+     * 验证MDC , 在日志文件的appender中增加 traceId=[%red(%X{mdcTraceId})]
+     * 打印各个线程的 traceId
+     * @return
+     */
     @RequestMapping("/test")
     public String test(){
         log.info("---------------------> test ");
-        return "success";
-    }
+        for (int i = 0; i < 10; i++) {
+            final int m = i;
+            new Thread(
+                    ()-> {
+                        MDC.put("mdcTraceId", UUID.randomUUID().toString());
+                        log.info("当前数值是:{}"+m);
+                        try {
+                            Thread.sleep((long)new Random().nextInt(100));
+                            log.info(Thread.currentThread().getName() + "睡了一会儿");
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        log.info(Thread.currentThread().getName() + "运行结束");
+                    }
 
-    @RequestMapping("/Future")
-    public String testFuture() throws ExecutionException, InterruptedException, TimeoutException {
-        log.info("---------------------> testFuture ");
-        FutureTask<String> futureTask = new FutureTask<>(
-                ()-> {
-                    int a = 3/0;
-                    log.info("future -----------> done");
-                    return "futureTask success";
-                }
-        );
-        new Thread(futureTask).start();
-        String s = futureTask.get();
-        log.info(s);
-        return "success";
-    }
-
-    @RequestMapping("/completableFutureJoin")
-    public String completableFutureJoin(){
-        log.info("---------------------> completableFutureJoin ");
-        CompletableFuture<String> futureTask1 = CompletableFuture.supplyAsync(
-                ()->{
-                    int a = 3/0;
-                    return "success";
-                }
-        );
-        CompletableFuture<String> futureTask2 = CompletableFuture.supplyAsync(
-                ()->{
-                    String str = null;
-                    System.out.println(str.equals(""));
-                    return "success";
-                }
-        );
-        CompletableFuture.allOf(futureTask1,futureTask2).join();
-        log.info("main ---------------->");
+            ).start();
+        }
         return "success";
     }
 }

@@ -25,7 +25,7 @@
             <pattern>
                 <!-- 设置日志输出格式 -->
                 <!-- 日期 [线程] [class类]-[日志级别] log内容 -->
-                %blue(%d{yyyy-MM-dd HH:mm:ss,SSS}) [%cyan(%t)] [%yellow(%c)]-[%highlight(%p)] %m%n
+                %blue(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%cyan(%t)] traceId=[%red(%X{mdcTraceId})] [%highlight(%p)] [%yellow(%c)] %m%n
             </pattern>
         </encoder>
     </appender>
